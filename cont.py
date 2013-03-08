@@ -20,6 +20,8 @@ class Contact:
         
 
     def _is_phone(self, s):
+        # we assume that a valid phone number should have >7
+        # consecutive digits (hyphens are omitted)
         if re.search('[0-9]{7}', s.replace('-','')):
             # print '[D] ' + s + ' is phone'
             return True
@@ -55,11 +57,11 @@ def main(argv):
    try:
       opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
    except getopt.GetoptError:
-      print 'test.py -i <inputfile> -o <outputfile>'
+      print 'cont.py -i <inputfile> -o <outputfile>'
       sys.exit(2)
    for opt, arg in opts:
       if opt == '-h':
-         print 'test.py -i <inputfile> -o <outputfile>'
+         print 'cont.py -i <inputfile> -o <outputfile>'
          sys.exit()
       elif opt in ("-i", "--ifile"):
          inputfile = arg
@@ -82,6 +84,7 @@ def main(argv):
            fout.write('\n')
        else:
            print c.parse(u)
+
 
 
 if __name__ == "__main__":
