@@ -1,48 +1,53 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import sys, getopt
+import re
 
-# get phone numbers of a single uses
-def get_phones(u):
-    pno = []
-    fs = u.split()
-    # examine each field of the split record
-    for f in fs:
-        if len(f)>6 and f.replace('-', '').isdigit():
-            pno.append(f)
-    return fs[0], pno
+class Contact:
+    def __init__(self):
+        self.name = ''
+        self.emails = []
+        self.phones = []
+        self.addrs = []
 
-# get emails of all users
-def dict_phones(ulist):
-    pnos = {}
+    def _is_email(self, s):
+        if s.find('@') != -1:
+            # print '[D] ' + s + ' is email'
+            return True
 
-    for u in ulist:
-        k, v = get_phones(u)
-        pnos[k] = v
-
-    return pnos
-
-
-# get emails of a single uses
-def get_emails(u):
-    emails = []
-    fs = u.split()    
-    for f in fs:
-        if f.find('@') != -1:
-            emails.append(f)
-    return fs[0], emails
-
-
-# get emails of all users
-def dict_emails(ulist):
-    emails = {}
-
-    for u in ulist:
-        k, v = get_emails(u)
-        emails[k] = v
-
-    return emails
+        return False
         
+
+    def _is_phone(self, s):
+        if re.search('[0-9]{7}', s.replace('-','')):
+            # print '[D] ' + s + ' is phone'
+            return True
+
+        return False
+
+    def parse(self, raw_record):
+        fields = raw_record.replace('；', ' ').split()
+        self.name = fields[0]
+        for f in fields[1:]:
+            if self._is_email(f):
+                self.emails.append(f)
+            elif self._is_phone(f):
+                self.phones.append(f)
+            else:               
+                self.addrs.append(f)
+
+        # to organize the output here
+        c = self.name + ','     # name comes 1st
+        for p in self.phones:   # follows the phone No.s
+            c += p + ','
+        for m in self.emails:   # follows the emails
+            c += m + ','
+        for a in self.addrs:    # follows the addresses
+            c += a + ','
+
+        return c
+
 
 def main(argv):
    inputfile = ''
@@ -60,26 +65,23 @@ def main(argv):
          inputfile = arg
       elif opt in ("-o", "--ofile"):
          outputfile = arg
-   print 'Input file is "', inputfile
-   print 'Output file is "', outputfile
+#   print 'Input file is "', inputfile
+#   print 'Output file is "', outputfile
 
 
-   users = open(inputfile, 'r')
-   ems = dict_emails(users)
-   users.close()
-   users = open(inputfile, 'r')
-   pnos = dict_phones(users)
-   users.close()
+   fin = open(inputfile, 'r')
+   if outputfile != '':
+       fout = open(outputfile, 'w')
+   else:
+       fout = None
 
-   o = open(outputfile, 'w')
-   for k in ems.keys():
-       print (k)
-       print (ems[k])
-       print pnos[k]
-       o.write('{} {} {}\n'.format(k, ems[k], pnos[k]))
-
-   # for k, v in ems.iteritems():
-   #     o.write('{} {}\n'.format(k, v))
+   for u in fin:
+       c = Contact()
+       if fout:
+           fout.write(c.parse(u))
+           fout.write('\n')
+       else:
+           print c.parse(u)
 
 
 if __name__ == "__main__":
